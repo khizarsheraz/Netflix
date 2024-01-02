@@ -1,0 +1,20 @@
+If you get docker login failed errorr
+
+sudo su
+sudo usermod -aG docker jenkins
+sudo systemctl restart jenkins
+
+
+
+If you get yarn Install timeout error in DockerFile
+
+Add 
+yarn config set httpTimeout 900000000000
+befor RUN yarn install
+
+
+
+If you get kubectl authentication error try below
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
