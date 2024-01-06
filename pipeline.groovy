@@ -23,11 +23,19 @@ pipeline{
             steps{
                 withSonarQubeEnv('sonar-server') {
                     sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Netflix \
-                    -Dsonar.projectKey=Netflix '''
+                    -Dsonar.projectKey=Netflix ''' 
                 }
             }
         }
 
+        // stage("quality gate") {
+        //     steps {
+        //         script {
+        //             waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token'
+        //         }
+        //     }
+        // }
+// i've commented quality gate it because on my machine it was taking too much time.
         stage('Install Dependencies') {
             steps {
                 sh "npm install"
@@ -65,7 +73,7 @@ pipeline{
                 sh 'docker run -d --name netflix -p 8081:80 khizarsheraz/netflix:latest'
             }
         }
-                stage('Deploy to kubernets'){
+        stage('Deploy to kubernets'){
             steps{
                 script{
                     dir('Kubernetes') {
