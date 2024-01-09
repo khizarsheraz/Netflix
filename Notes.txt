@@ -10,8 +10,8 @@ If you get yarn Install timeout error in DockerFile
 
 Add 
 yarn config set httpTimeout 900000000000
-befor RUN yarn install
-
+yarn config set disable-self-update-check true
+RUN yarn install --network-timeout=999999999
 
 
 If you get kubectl authentication error try below

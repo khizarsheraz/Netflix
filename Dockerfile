@@ -3,7 +3,8 @@ WORKDIR /app
 COPY ./package.json .
 COPY ./yarn.lock .
 RUN yarn config set httpTimeout 900000000000
-RUN yarn install
+yarn config set disable-self-update-check true
+RUN yarn install --network-timeout=999999999
 COPY . .
 ARG TMDB_V3_API_KEY
 ENV VITE_APP_TMDB_V3_API_KEY=${TMDB_V3_API_KEY}
