@@ -28,13 +28,13 @@ pipeline{
             }
         }
 
-        // stage("quality gate") {
-        //     steps {
-        //         script {
-        //             waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token'
-        //         }
-        //     }
-        // }
+        stage("quality gate") {
+            steps {
+                script {
+                    waitForQualityGate abortPipeline: true, credentialsId: 'Sonar-token'
+                }
+            }
+        }
 // i've commented quality gate it because on my machine it was taking too much time.
         stage('Install Dependencies') {
             steps {
