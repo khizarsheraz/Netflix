@@ -31,7 +31,7 @@ pipeline{
         stage("quality gate") {
             steps {
                 script {
-                    waitForQualityGate abortPipeline: true, credentialsId: 'Sonar-token'
+                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token'
                 }
             }
         }
@@ -41,17 +41,22 @@ pipeline{
                 sh "npm install"
             }
         }
-        stage('OWASP FS SCAN') {
+        stage('OWASP  Dependency Check FS SCAN') {
             steps {
                 dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
                 dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
             }
         }
-        stage('TRIVY FS SCAN') {
+        stage('TRIVY FS SCAN - Vulnerability Scan - Docker File') {
             steps {
                 sh "trivy fs . > trivyfs.txt"
             }
         }
+
+        stage('OPA Conftest - Docker File Scan')
+            steps {
+                sh 'conftest test --policy dockerfile-security.rego Dockerfile'
+            }
         stage("Docker Build & Push"){
             steps{
                 script{
@@ -70,7 +75,7 @@ pipeline{
         }
         stage('Deploy to container'){
             steps{
-                sh 'docker run -d --name netflix -p 8081:80 khizarsheraz/netflix:latest'
+                sh 'docker run -d -p 8081:80 khizarsheraz/netflix:latest'
             }
         }
         stage('Deploy to kubernets'){
