@@ -55,7 +55,7 @@ pipeline{
 
         stage('OPA Conftest - Docker File Scan')
             steps {
-                sh 'conftest test --policy dockerfile-security.rego Dockerfile'
+                sh 'conftest test --policy Opa-Docker-Security.rego Dockerfile'
             }
         stage("Docker Build & Push"){
             steps{
