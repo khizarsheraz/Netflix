@@ -53,10 +53,11 @@ pipeline{
             }
         }
 
-        stage('OPA Conftest - Docker File Scan')
+        stage('OPA Conftest - Docker File Scan'){
             steps {
-                sh 'conftest test --policy Opa-Docker-Security.rego Dockerfile'
+                sh 'conftest test --policy /root/Netflix/Opa-Docker-Security.rego /root/Netflix/Dockerfile'
             }
+        }   
         stage("Docker Build & Push"){
             steps{
                 script{
@@ -78,6 +79,14 @@ pipeline{
                 sh 'docker run -d -p 8081:80 khizarsheraz/netflix:latest'
             }
         }
+
+        
+        stage('OPA Conftest - Kubernetes File Scan'){
+            steps {
+                sh 'conftest test --policy /root/Netflix/opa-k8s-security.rego /root/Netflix/Kubernetes/deployment.yml'
+            }
+        } 
+
         stage('Deploy to kubernets'){
             steps{
                 script{
