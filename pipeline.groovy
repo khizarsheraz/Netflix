@@ -86,9 +86,19 @@ pipeline{
         
         stage('OPA Conftest - Kubernetes File Scan'){
             steps {
+                catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
                 sh 'sudo conftest test --policy /root/Netflix/opa-k8s-security.rego /root/Netflix/Kubernetes/deployment.yml'
+                }
             }
         } 
+
+       stage('KubeSec - Kubernetes Vulnerability scan'){
+            steps {
+                sh 'sudo kubesec scan /root/Netflix/Kubernetes/deployment.yml'
+                
+            }
+        } 
+
 
         stage('Deploy to kubernets'){
             steps{
