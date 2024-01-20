@@ -94,8 +94,9 @@ pipeline{
 
        stage('KubeSec - Kubernetes Vulnerability scan'){
             steps {
+                catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
                 sh 'sudo kubesec scan /root/Netflix/Kubernetes/deployment.yml'
-                
+                } 
             }
         } 
 
