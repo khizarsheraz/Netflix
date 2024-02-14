@@ -19,14 +19,14 @@ pipeline{
                 git branch: 'main', url: 'https://github.com/khizarsheraz/Netflix.git'
             }
         }
-        // stage("Sonarqube Analysis "){
-        //     steps{
-        //         withSonarQubeEnv('sonar-server') {
-        //             sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Netflix \
-        //             -Dsonar.projectKey=Netflix ''' 
-        //         }
-        //     }
-        // }
+        stage("Sonarqube Analysis "){
+            steps{
+                withSonarQubeEnv('sonar-server') {
+                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Netflix \
+                    -Dsonar.projectKey=Netflix ''' 
+                }
+            }
+        }
 
         // stage("quality gate") {
         //     steps {
@@ -41,17 +41,17 @@ pipeline{
                 sh "npm install"
             }
         }
-        // stage('OWASP  Dependency Check FS SCAN') {
-        //     steps {
-        //         dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
-        //         dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
-        //     }
-        // }
-        // stage('TRIVY FS SCAN - Vulnerability Scan - Docker File') {
-        //     steps {
-        //         sh "trivy fs . > trivyfs.txt"
-        //     }
-        // }
+        stage('OWASP  Dependency Check FS SCAN') {
+            steps {
+                dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+            }
+        }
+        stage('TRIVY FS SCAN - Vulnerability Scan - Docker File') {
+            steps {
+                sh "trivy fs . > trivyfs.txt"
+            }
+        }
 
         stage('OPA Conftest - Docker File Scan'){
             steps {
@@ -72,11 +72,11 @@ pipeline{
                 }
             }
         }
-        // stage("TRIVY Docker Image Scan"){
-        //     steps{
-        //         sh "trivy image khizarsheraz/netflix:latest > trivyimage.txt" 
-        //     }
-        // }
+        stage("TRIVY Docker Image Scan"){
+            steps{
+                sh "trivy image khizarsheraz/netflix:latest > trivyimage.txt" 
+            }
+        }
         stage('Deploy to container'){
             steps{
                 sh 'docker run -d -p 8081:80 khizarsheraz/netflix:latest'
@@ -113,5 +113,45 @@ pipeline{
                 }
             }
         }
+
+
+        
+         stage('Owasp ZAP - DAST') {
+                
+                    environment {
+                        ZAP_DOCKER_IMAGE = ' owasp/zap2docker-weekly'
+                        ZAP_TARGET = 'http://192.168.100.148:30007'
+                    }
+                    steps {
+                        script {
+                            sh "docker pull ${ZAP_DOCKER_IMAGE}"
+                            sh "chmod 777 ${pwd}"
+                            try {
+                                sh "docker run -v ${pwd}:/zap/wrk/:rw -t ${ZAP_DOCKER_IMAGE} zap-baseline.py -t ${ZAP_TARGET} -r zap_report2.html"
+                            }
+                                catch (Exception e) {
+                                                     echo "OWASP ZAP scan failed: ${e}"
+                                        // Continue pipeline execution even if OWASP ZAP scan fails
+                                            }
+                            //below command will remove all the containers build upon owasp image
+                            sh "docker ps -a | awk '\$2 ~ /owasp\\/zap2docker-weekly/ {print \$1}' | xargs docker rm" 
+                            sh "echo owasp images removed"               
+                            sh "mkdir -p owasp-zap-report"
+                            sh "sudo mv /var/lib/jenkins/zap_report2.html owasp-zap-report"
+                    }
+                }
+                       post {
+                            always {
+                                    archiveArtifacts artifacts: 'owasp-zap-report/zap_report2.html'
+                                    publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'owasp-zap-report', reportFiles: 'zap_report2.html', reportName: 'Owasp Zap Report', reportTitles: 'Owasp Zap Report', useWrapperFileDirectly: true])
+                                    echo 'Removing container'
+
+
+                                    cleanWs()                           
+                             }
+                        }
+        
+        }
     }
+    
 }
