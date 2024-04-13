@@ -19,22 +19,16 @@ pipeline{
                 git branch: 'main', url: 'https://github.com/khizarsheraz/Netflix.git'
             }
         }
-        stage("Sonarqube Analysis "){
-            steps{
-                withSonarQubeEnv('sonar-server') {
-                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Netflix \
-                    -Dsonar.projectKey=Netflix ''' 
-                }
-            }
-        }
-
-        // stage("quality gate") {
-        //     steps {
-        //         script {
-        //             waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token'
+        // stage("Sonarqube Analysis "){
+        //     steps{
+        //         withSonarQubeEnv('sonar-server') {
+        //             sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Netflix \
+        //             -Dsonar.projectKey=Netflix ''' 
         //         }
         //     }
         // }
+
+
 // i've commented quality gate it because on my machine it was taking too much time.
         stage('Install Dependencies') {
             steps {
@@ -151,6 +145,12 @@ pipeline{
                              }
                         }
         
+        }
+
+             stage('Kube-bench - CIS benchmarking'){
+                steps{
+                        sh 'sudo kube-bench run '     
+                    }
         }
     }
     
