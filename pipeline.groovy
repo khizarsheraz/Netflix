@@ -28,85 +28,92 @@ pipeline{
         //     }
         // }
 
+        // stage("quality gate"){
+        //    steps {
+        //         script {
+        //             waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token' 
+        //         }
+        //     } 
+        // }
 
 // i've commented quality gate it because on my machine it was taking too much time.
-        stage('Install Dependencies') {
-            steps {
-                sh "npm install"
-            }
-        }
-        stage('OWASP  Dependency Check FS SCAN') {
-            steps {
-                dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
-                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
-            }
-        }
-        stage('TRIVY FS SCAN - Vulnerability Scan - Docker File') {
-            steps {
-                sh "trivy fs . > trivyfs.txt"
-            }
-        }
+        // stage('Install Dependencies') {
+        //     steps {
+        //         sh "npm install"
+        //     }
+        // }
+        // stage('OWASP  Dependency Check FS SCAN') {
+        //     steps {
+        //         dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
+        //         dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+        //     }
+        // }
+        // stage('TRIVY FS SCAN - Vulnerability Scan - Docker File') {
+        //     steps {
+        //         sh "trivy fs . > trivyfs.txt"
+        //     }
+        // }
 
-        stage('OPA Conftest - Docker File Scan'){
-            steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                sh 'sudo conftest test --policy /root/Netflix/Opa-Docker-Security.rego /root/Netflix/Dockerfile'
+        // stage('OPA Conftest - Docker File Scan'){
+        //     steps {
+        //         catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+        //         sh 'sudo conftest test --policy /root/Netflix/Opa-Docker-Security.rego /root/Netflix/Dockerfile'
                 
-                }
-            }
-        }   
-        stage("Docker Build & Push"){
-            steps{
-                script{
-                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker'){   
-                       sh "sudo docker build --build-arg TMDB_V3_API_KEY=4deef21ee71793e3884296430a8e9a90 -t netflix ."
-                       sh "sudo docker tag netflix khizarsheraz/netflix:latest "
-                       sh "sudo docker push khizarsheraz/netflix:latest "
-                    }
-                }
-            }
-        }
-        stage("TRIVY Docker Image Scan"){
-            steps{
-                sh "trivy image khizarsheraz/netflix:latest > trivyimage.txt" 
-            }
-        }
-        stage('Deploy to container'){
-            steps{
-                sh 'docker run -d -p 8081:80 khizarsheraz/netflix:latest'
-            }
-        }
+        //         }
+        //     }
+        // }   
+        // stage("Docker Build & Push"){
+        //     steps{
+        //         script{
+        //             withDockerRegistry(credentialsId: 'docker', toolName: 'docker'){   
+        //                sh "sudo docker build --build-arg TMDB_V3_API_KEY=4deef21ee71793e3884296430a8e9a90 -t netflix ."
+        //                sh "sudo docker tag netflix khizarsheraz/netflix:latest "
+        //                sh "sudo docker push khizarsheraz/netflix:latest "
+        //             }
+        //         }
+        //     }
+        // }
+        // stage("TRIVY Docker Image Scan"){
+        //     steps{
+        //         sh "trivy image khizarsheraz/netflix:latest > trivyimage.txt" 
+        //     }
+        // }
+        // stage('Deploy to container'){
+        //     steps{
+        //         sh 'docker run -d -p 8081:80 khizarsheraz/netflix:latest'
+        //     }
+        // }
 
         
-        stage('OPA Conftest - Kubernetes File Scan'){
-            steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                sh 'sudo conftest test --policy /root/Netflix/opa-k8s-security.rego /root/Netflix/Kubernetes/deployment.yml'
-                }
-            }
-        } 
+        // stage('OPA Conftest - Kubernetes File Scan'){
+        //     steps {
+        //         catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+        //         sh 'sudo conftest test --policy /root/Netflix/opa-k8s-security.rego /root/Netflix/Kubernetes/deployment.yml'
+        //         }
+        //     }
+        // } 
 
-       stage('KubeSec - Kubernetes Vulnerability scan'){
-            steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                sh 'sudo kubesec scan /root/Netflix/Kubernetes/deployment.yml'
-                } 
-            }
-        } 
+    //    stage('KubeSec - Kubernetes Vulnerability scan'){
+    //         steps {
+    //             catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+    //             sh 'sudo kubesec scan /root/Netflix/Kubernetes/deployment.yml'
+    //             } 
+    //         }
+    //     } 
 
 
-        stage('Deploy to kubernets'){
-            steps{
-                script{
-                    dir('Kubernetes') {
-                        withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'kubeconfig', namespace: '', restrictKubeConfigAccess: false, serverUrl: '') {
-                                sh 'kubectl apply -f deployment.yml'
-                                sh 'kubectl apply -f service.yml'
-                        }   
-                    }
-                }
-            }
-        }
+        // stage('Deploy to kubernets'){
+        //     steps{
+        //         script{
+        //             dir('Kubernetes') {
+        //                 withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'kubeconfig', namespace: '', restrictKubeConfigAccess: false, serverUrl: '') {
+        //                         sh 'kubectl apply -f deployment.yml'
+        //                         sh 'kubectl apply -f service.yml'
+        //                 }   
+        //             }
+        //         }
+        //     }
+        // }
 
 
         
@@ -115,10 +122,12 @@ pipeline{
                     environment {
                         ZAP_DOCKER_IMAGE = ' owasp/zap2docker-weekly'
                         ZAP_TARGET = 'http://192.168.100.148:30007'
+                        DOCKER_PLATFORM = 'linux/amd64'
                     }
                     steps {
                         script {
-                            sh "docker pull ${ZAP_DOCKER_IMAGE}"
+                            //  Get the zap docker image and run it in daemon mode, comment down below line if owasp zap image is already available
+                            // sh "docker pull --platform ${DOCKER_PLATFORM} ${ZAP_DOCKER_IMAGE}"
                             sh "chmod 777 ${pwd}"
                             try {
                                 sh "docker run -v ${pwd}:/zap/wrk/:rw -t ${ZAP_DOCKER_IMAGE} zap-baseline.py -t ${ZAP_TARGET} -r zap_report2.html"
