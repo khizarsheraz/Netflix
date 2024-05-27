@@ -28,13 +28,13 @@ pipeline{
             }
         }
 
-        // stage("quality gate"){
-        //    steps {
-        //         script {
-        //             waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token' 
-        //         }
-        //     } 
-        // }
+        stage("quality gate"){
+           steps {
+                script {
+                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token' 
+                }
+            } 
+        }
 
 // i've commented quality gate it because on my machine it was taking too much time.
         stage('Install Dependencies') {
@@ -137,7 +137,7 @@ pipeline{
                                         // Continue pipeline execution even if OWASP ZAP scan fails
                                             }
                             //below command will remove all the containers build upon owasp image
-                            sh "docker ps -a | awk '\$2 ~ /owasp\\/zap2docker-weekly/ {print \$1}' | xargs docker rm" 
+                            sh "docker ps -a | awk '\$2 ~ /ictu\\/zap2docker-weekly/ {print \$1}' | xargs docker rm" 
                             sh "echo owasp images removed"               
                             sh "mkdir -p owasp-zap-report"
                             sh "sudo mv /var/lib/jenkins/zap_report2.html owasp-zap-report"
