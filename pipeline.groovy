@@ -127,7 +127,7 @@ pipeline{
                     steps {
                         script {
                             //  Get the zap docker image and run it in daemon mode, comment down below line if owasp zap image is already available
-                            // sh "docker pull --platform ${DOCKER_PLATFORM} ${ZAP_DOCKER_IMAGE}"
+                            sh "docker pull --platform ${DOCKER_PLATFORM} ${ZAP_DOCKER_IMAGE}"
                             sh "chmod 777 ${pwd}"
                             try {
                                 sh "docker run -v ${pwd}:/zap/wrk/:rw -t ${ZAP_DOCKER_IMAGE} zap-baseline.py -t ${ZAP_TARGET} -r zap_report2.html"
