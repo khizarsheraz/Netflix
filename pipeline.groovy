@@ -84,6 +84,12 @@ pipeline{
             }
         }
 
+        stage('TRIVY Container SCAN - Vulnerability Scan - Docker Container') {
+            steps {
+                sh "trivy image $(docker inspect --format='{{.Config.Image}}' netflix)"
+            }
+        }
+
         
         stage('OPA Conftest - Kubernetes File Scan'){
             steps {
@@ -121,7 +127,7 @@ pipeline{
                 
                     environment {
                         ZAP_DOCKER_IMAGE = 'ictu/zap2docker-weekly' //this is the image id of owasp/zap2docker-stable, as my linux version is amd64, i'm specifying the already downloaded image
-                        ZAP_TARGET = 'http://192.168.100.148:30007'
+                        ZAP_TARGET = 'http://192.168.1.150:30007'
                         DOCKER_PLATFORM = 'linux/amd64'
                     }
                     steps {
